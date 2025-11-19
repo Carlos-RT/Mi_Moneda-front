@@ -1,6 +1,6 @@
-// src/components/Meta.jsx
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import fondometa from "../imagenes/Fondo_meta.jpg";
 
 function numberWithCommas(x) {
   return x?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") || "0";
@@ -9,42 +9,44 @@ function numberWithCommas(x) {
 export default function Meta() {
   const navigate = useNavigate();
 
-  // estados del formulario
+  // Estados base
   const [salary, setSalary] = useState("");
   const [months, setMonths] = useState("");
   const [goalAmount, setGoalAmount] = useState("");
 
-  // estados de resultado
+  // Resultados
   const [planVisible, setPlanVisible] = useState(false);
   const [neededPerMonth, setNeededPerMonth] = useState(0);
   const [maxSavePerMonth, setMaxSavePerMonth] = useState(0);
   const [feasible, setFeasible] = useState(null);
   const [resultSummary, setResultSummary] = useState([]);
 
-  // progreso (desde localStorage)
+  // Progreso
   const [progress, setProgress] = useState(null);
 
-  // referencia al modal para sugerencias
-  const suggestModalRef = useRef(null);
+  // Modal propio
+  const [modalInfo, setModalInfo] = useState(null);
 
-  // cargar valores iniciales desde localStorage cuando el componente se monta
+  // Cargar localStorage al iniciar
   useEffect(() => {
     const s = localStorage.getItem("smart_salary");
     const g = localStorage.getItem("smart_goal");
     const m = localStorage.getItem("smart_months");
+
     if (s) setSalary(s);
     if (g) setGoalAmount(g);
     if (m) setMonths(m);
 
-    // cargar cualquier plan/progreso guardado
     loadSavedProgress();
   }, []);
 
   function computePlan(e) {
     e && e.preventDefault();
+
     const s = Number(salary);
     const mo = Number(months);
     const g = Number(goalAmount);
+
     if (!s || !mo || !g) return;
 
     const disposableRatio = 0.5;
@@ -52,96 +54,104 @@ export default function Meta() {
     const needed = Math.ceil(g / mo);
     const isFeasible = needed <= maxSave;
 
-    // guardar plan en localStorage
-    const plan = { salary: s, months: mo, goal: g, neededPerMonth: needed, maxSavePerMonth: maxSave };
+    const plan = {
+      salary: s,
+      months: mo,
+      goal: g,
+      neededPerMonth: needed,
+      maxSavePerMonth: maxSave,
+    };
+
+    // Guardar
     localStorage.setItem("smart_plan", JSON.stringify(plan));
 
-    // establecer estados para renderizar
     setNeededPerMonth(needed);
     setMaxSavePerMonth(Math.round(maxSave));
     setFeasible(isFeasible);
     setPlanVisible(true);
 
-    const summary = [
+    setResultSummary([
       { label: "Monto objetivo", value: `$${numberWithCommas(g)}` },
       { label: "Plazo", value: `${mo} meses` },
-      { label: "Ahorro requerido por mes", value: `$${numberWithCommas(needed)}` },
-      { label: "Máximo recomendado por mes (50% del salario)", value: `$${numberWithCommas(Math.round(maxSave))}` },
-    ];
-    setResultSummary(summary);
+      { label: "Ahorro requerido mensual", value: `$${numberWithCommas(needed)}` },
+      {
+        label: "Máximo recomendado por mes (50% salario)",
+        value: `$${numberWithCommas(Math.round(maxSave))}`,
+      },
+    ]);
 
-    // crear una entrada de progreso simulada si es factible (mismo comportamiento que el original)
     if (isFeasible) {
       saveProgress(plan, 0);
-    } else {
-      // si no es factible, proporcionar alternativas en el marcado a continuación (estado usado)
     }
   }
 
   function showAlternatives(plan) {
-    // devuelve un arreglo de objetos alternativas
     return [
-      { title: `Extiende plazo a ${plan.months * 2} meses`, detail: `Reducirías la cuota mensual a $${numberWithCommas(Math.ceil(plan.goal / (plan.months * 2)))}` },
-      { title: `Divide la meta en metas parciales`, detail: `Establece metas más pequeñas (ej: ahorrar 25% de la meta en los primeros X meses) para generar hábito y confianza.` },
-      { title: `Explorar planes de ahorro / microcréditos`, detail: `Revisa opciones que permitan financiamiento con plazos más largos o ahorro programado con interés.` }
+      {
+        title: `Extender plazo a ${plan.months * 2} meses`,
+        detail: `Reducirías el pago mensual a $${numberWithCommas(
+          Math.ceil(plan.goal / (plan.months * 2))
+        )}`,
+      },
+      {
+        title: "Dividir la meta en metas parciales",
+        detail:
+          "Establece metas más pequeñas para generar hábito y mejorar tus probabilidades de éxito.",
+      },
+      {
+        title: "Explorar planes bancarios o microcréditos",
+        detail:
+          "Podrías encontrar opciones con plazos más largos o ahorro programado.",
+      },
     ];
   }
 
   function openSuggestion(title, detail) {
-    // llenar cuerpo del modal y mostrar modal bootstrap
-    const body = document.getElementById("suggestBody");
-    if (body) body.innerHTML = `<h6>${title}</h6><p>${detail}</p>`;
-    try {
-      // window.bootstrap está presente si cargaste el paquete de Bootstrap
-      if (window.bootstrap && suggestModalRef.current) {
-        const bsModal = new window.bootstrap.Modal(suggestModalRef.current);
-        bsModal.show();
-      }
-    } catch (err) {
-      console.warn("No se pudo abrir modal bootstrap", err);
-    }
+    setModalInfo({ title, detail });
   }
 
   function renderRecommendations(plan, feasibleFlag) {
-    // devuelve un arreglo de elementos JSX (los renderizaremos abajo)
     if (feasibleFlag) {
       return (
-        <div className="mt-3">
-          <h6>Recomendaciones personalizadas</h6>
-          <ul>
-            <li>Automatizar la transferencia mensual de {`$${numberWithCommas(plan.neededPerMonth)}`}</li>
-            <li>Crear un fondo de emergencia equivalente a 1 mes de salario.</li>
-            <li>Revisar suscripciones y gastos innecesarios.</li>
+        <div className="card">
+          <h4>Recomendaciones</h4>
+          <ul className="list" style={{ marginTop: "10px" }}>
+            <li>
+              Automatiza la transferencia mensual de $
+              {numberWithCommas(plan.neededPerMonth)}
+            </li>
+            <li>Crea un fondo de emergencia.</li>
+            <li>Revisa gastos variables y elimina suscripciones innecesarias.</li>
           </ul>
         </div>
       );
     } else {
       return (
-        <div className="mt-3">
-          <h6>Acciones que puedes tomar</h6>
-          <ul>
-            <li>Habla con nuestro asistente para generar un plan alternativo.</li>
-            <li>Considera extender el plazo o dividir la meta.</li>
-            <li>Explora planes bancarios disponibles en la sección "Bancos".</li>
+        <div className="card">
+          <h4>Acciones recomendadas</h4>
+          <ul className="list" style={{ marginTop: "10px" }}>
+            <li>Habla con un asesor o asistente virtual.</li>
+            <li>Divide la meta o extiende el plazo.</li>
+            <li>Consulta la sección de Bancos para más alternativas.</li>
           </ul>
         </div>
       );
     }
   }
 
-  // guardar / cargar progreso
-  function saveProgress(plan, currentAmount = 0) {
-    const p = { plan, currentAmount, updated: new Date().toISOString() };
+  function saveProgress(plan, currentAmount) {
+    const p = {
+      plan,
+      currentAmount,
+      updated: new Date().toISOString(),
+    };
+
     localStorage.setItem("smart_progress", JSON.stringify(p));
     loadSavedProgress();
   }
 
   function loadSavedProgress() {
     const p = JSON.parse(localStorage.getItem("smart_progress") || "null");
-    if (!p) {
-      setProgress(null);
-      return;
-    }
     setProgress(p);
   }
 
@@ -153,150 +163,281 @@ export default function Meta() {
 
   return (
     <>
-      <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+      {/* NAV */}
+      <nav className="navbar">
         <div className="container">
-          <a className="navbar-brand nav-brand" href="#" onClick={(e) => { e.preventDefault(); navigate("/"); }}>SmartSaving</a>
-          <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
-            <span className="navbar-toggler-icon"></span>
-          </button>
-          <div className="collapse navbar-collapse" id="navMain">
-            <ul className="navbar-nav ms-auto">
-              <li className="nav-item"><Link className="nav-link" to="/">Inicio</Link></li>
-              <li className="nav-item"><Link className="nav-link" to="/meta">Mi Meta</Link></li>
-              <li className="nav-item"><Link className="nav-link" to="/bancos">Bancos</Link></li>
-            </ul>
-          </div>
+          <span className="nav-brand" onClick={() => navigate("/")}>
+            SmartSaving
+          </span>
+
+          <ul>
+            <li>
+              <Link to="/">Inicio</Link>
+            </li>
+            <li>
+              <Link to="/meta">Mi Meta</Link>
+            </li>
+            <li>
+              <Link to="/bancos">Bancos</Link>
+            </li>
+          </ul>
         </div>
       </nav>
 
-      <main className="container my-5">
-        <section id="dashboard" className="view active">
+      {/* CONTENIDO */}
+      <div
+        style={{
+          backgroundImage: `url(${fondometa})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundAttachment: "fixed",
+          backgroundRepeat: "no-repeat",
+          minHeight: "100vh",
+          marginTop: "0px",
+          paddingTop: "100px",
+        }}
+      >
+        <main className="container section">
           <div className="row">
-            <div className="col-lg-7">
-              <div className="card shadow-sm mb-3">
-                <div className="card-body">
-                  <h5>Define tu meta</h5>
-                  <form id="goalForm" onSubmit={computePlan}>
-                    <div className="row g-3">
-                      <div className="col-md-6">
-                        <label className="form-label">Salario mensual (COP)</label>
-                        <input value={salary} onChange={(e) => setSalary(e.target.value)} id="salary" type="number" min="0" className="form-control" placeholder="2000000" required />
-                      </div>
-                      <div className="col-md-6">
-                        <label className="form-label">¿Meta en cuánto tiempo?</label>
-                        <div className="input-group">
-                          <input value={months} onChange={(e) => setMonths(e.target.value)} id="months" type="number" min="1" className="form-control" placeholder="meses" required />
-                          <span className="input-group-text">meses</span>
-                        </div>
-                      </div>
+            {/* COLUMNA IZQUIERDA */}
+            <div className="col-7">
+              <div className="card">
+                <h3>Define tu meta</h3>
 
-                      <div className="col-12">
-                        <label className="form-label">Monto objetivo (COP)</label>
-                        <input value={goalAmount} onChange={(e) => setGoalAmount(e.target.value)} id="goalAmount" type="number" min="0" className="form-control" placeholder="5000000" required />
-                      </div>
+                <form onSubmit={computePlan} style={{ marginTop: "15px" }}>
+                  <label className="form-label">Salario mensual (COP)</label>
+                  <input
+                    className="input"
+                    type="number"
+                    value={salary}
+                    onChange={(e) => setSalary(e.target.value)}
+                  />
 
-                      <div className="col-12 d-flex gap-2">
-                        <button className="btn btn-primary">Calcular plan</button>
-                        <button type="button" className="btn btn-outline-secondary" onClick={handleLoadExample}>Ejemplo</button>
-                      </div>
-                    </div>
-                  </form>
-                </div>
+                  <label className="form-label">Meses para lograr la meta</label>
+                  <input
+                    className="input"
+                    type="number"
+                    value={months}
+                    onChange={(e) => setMonths(e.target.value)}
+                  />
+
+                  <label className="form-label">Monto objetivo (COP)</label>
+                  <input
+                    className="input"
+                    type="number"
+                    value={goalAmount}
+                    onChange={(e) => setGoalAmount(e.target.value)}
+                  />
+
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    <button className="btn btn-primary">Calcular plan</button>
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      onClick={handleLoadExample}
+                    >
+                      Ejemplo
+                    </button>
+                  </div>
+                </form>
               </div>
 
+              {/* RESULTADO */}
               {planVisible && (
-                <div id="planResult" className="card shadow-sm">
-                  <div className="card-body">
-                    <h5>Plan sugerido</h5>
+                <div className="card">
+                  <h3>Plan sugerido</h3>
 
-                    <div>
-                      {resultSummary.map((r) => (
-                        <p key={r.label}><strong>{r.label}:</strong> {r.value}</p>
+                  {resultSummary.map((r) => (
+                    <p key={r.label}>
+                      <strong>{r.label}:</strong> {r.value}
+                    </p>
+                  ))}
+
+                  {/* META FACTIBLE */}
+                  {feasible ? (
+                    <div className="alert-success">
+                      <div className="alert-title">Tu meta es alcanzable</div>
+                      <p>
+                        Estás dentro de un rango saludable de ahorro. Mantén
+                        disciplina y sigue estas recomendaciones:
+                      </p>
+
+                      <ul className="list" style={{ marginTop: "10px" }}>
+                        <li>
+                          Pago mensual sugerido: $
+                          {numberWithCommas(neededPerMonth)}
+                        </li>
+                        <li>Automatiza el pago mensual.</li>
+                        <li>
+                          Reduce gastos variables y crea un fondo de emergencia.
+                        </li>
+                      </ul>
+                    </div>
+                  ) : (
+                    /* META NO FACTIBLE */
+                    <div className="alert-warning">
+                      <div className="alert-title">
+                        Tu meta es difícil de alcanzar
+                      </div>
+                      <p>
+                        Con los datos actuales, la cuota requerida supera lo
+                        recomendado. Te sugerimos evaluar estas
+                        alternativas:
+                      </p>
+
+                      {showAlternatives({
+                        months: Number(months),
+                        goal: Number(goalAmount),
+                      }).map((alt) => (
+                        <div
+                          key={alt.title}
+                          className="card"
+                          style={{ marginTop: "10px" }}
+                        >
+                          <strong>{alt.title}</strong>
+                          <p style={{ marginTop: "5px" }}>{alt.detail}</p>
+
+                          {/* 🔥 BOTÓN MODIFICADO AQUÍ */}
+                          {alt.title ===
+                          "Explorar planes bancarios o microcréditos" ? (
+                            <button
+                              className="btn btn-outline"
+                              onClick={() => navigate("/bancos")}
+                            >
+                              Revisa nuestros bancos
+                            </button>
+                          ) : (
+                            <button
+                              className="btn btn-outline"
+                              onClick={() =>
+                                openSuggestion(alt.title, alt.detail)
+                              }
+                            >
+                              Ver detalles
+                            </button>
+                          )}
+                        </div>
                       ))}
                     </div>
-
-                    {feasible ? (
-                      <div className="alert alert-success">¡Tu meta parece alcanzable con disciplina! Aquí hay un plan sugerido:
-                        <ol>
-                          <li>Abono fijo mensual: {`$${numberWithCommas(neededPerMonth)}`}</li>
-                          <li>Automatiza transferencia el día de tu salario.</li>
-                          <li>Revisa gastos variables y crea un fondo de emergencia.</li>
-                        </ol>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="alert alert-warning">Tu meta actual se clasifica como <strong>económicamente inalcanzable</strong> según las normas iniciales. No te preocupes: aquí tienes alternativas.</div>
-
-                        <ul className="list-group">
-                          {showAlternatives({ months: Number(months), goal: Number(goalAmount) }).map((a) => (
-                            <li key={a.title} className="list-group-item">
-                              <strong>{a.title}</strong>
-                              <div>{a.detail}</div>
-                              <div className="mt-2">
-                                <button className="btn btn-sm btn-outline-primary" onClick={() => openSuggestion(a.title, a.detail)}>Más detalles</button>
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
               )}
 
-              <div id="recommendations">
-                {planVisible && renderRecommendations({ neededPerMonth }, feasible)}
-              </div>
+              {/* RECOMENDACIONES */}
+              {planVisible &&
+                renderRecommendations({ neededPerMonth }, feasible)}
             </div>
 
-            <div className="col-lg-5">
-              <div className="card shadow-sm p-3 mb-3">
-                <h6>Progreso</h6>
-                <div id="progressArea">
-                  {progress ? (
-                    <>
-                      <div><strong>{`$${numberWithCommas(progress.plan.goal)}`}</strong> objetivo en {progress.plan.months} meses</div>
-                      <div className="progress mt-2" style={{height:18}}>
-                        <div className="progress-bar" role="progressbar" style={{width: `${Math.min(100, Math.round((progress.currentAmount / progress.plan.goal) * 100))}%`}}>
-                          {Math.min(100, Math.round((progress.currentAmount / progress.plan.goal) * 100))}%
-                        </div>
+            {/* COLUMNA DERECHA */}
+            <div className="col-5">
+              <div className="card">
+                <h3>Progreso</h3>
+
+                {progress ? (
+                  <>
+                    <p>
+                      Meta:{" "}
+                      <strong>
+                        ${numberWithCommas(progress.plan.goal)}
+                      </strong>{" "}
+                      en {progress.plan.months} meses
+                    </p>
+
+                    <div className="progress">
+                      <div
+                        className="progress-bar"
+                        style={{
+                          width: `${Math.min(
+                            100,
+                            Math.round(
+                              (progress.currentAmount /
+                                progress.plan.goal) *
+                                100
+                            )
+                          )}%`,
+                        }}
+                      >
+                        {Math.min(
+                          100,
+                          Math.round(
+                            (progress.currentAmount /
+                              progress.plan.goal) *
+                              100
+                          )
+                        )}
+                        %
                       </div>
-                      <div className="mt-2 small text-muted">Última actualización: {new Date(progress.updated).toLocaleString()}</div>
-                    </>
-                  ) : (
-                    <p className="text-muted">Añade una meta para ver seguimiento.</p>
-                  )}
-                </div>
+                    </div>
+
+                    <p
+                      style={{
+                        marginTop: "8px",
+                        fontSize: "0.9rem",
+                        color: "#666",
+                      }}
+                    >
+                      Última actualización:{" "}
+                      {new Date(progress.updated).toLocaleString()}
+                    </p>
+                  </>
+                ) : (
+                  <p style={{ color: "#777" }}>
+                    Aún no tienes progreso registrado.
+                  </p>
+                )}
               </div>
 
-              <div className="card shadow-sm p-3">
-                <h6>Consejos rápidos</h6>
-                <ul id="quickTips">
-                  <li>Automatiza una transferencia mensual al inicio de mes.</li>
-                  <li>Reduce gastos variables 10% y redirígelos a la meta.</li>
-                  <li>Revisa suscripciones y cancela las que no uses.</li>
+              <div className="card">
+                <h3>Consejos rápidos</h3>
+                <ul className="list" style={{ marginTop: "10px" }}>
+                  <li>Automatiza tus transferencias.</li>
+                  <li>Reduce gastos 10% este mes.</li>
+                  <li>Revisa suscripciones inactivas.</li>
                 </ul>
               </div>
             </div>
           </div>
-        </section>
-      </main>
+        </main>
+      </div>
 
-      {/* Modal */}
-      <div className="modal fade" id="suggestModal" tabIndex="-1" aria-hidden="true" ref={suggestModalRef}>
-        <div className="modal-dialog">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title">Sugerencias para tu meta</h5>
-              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div className="modal-body" id="suggestBody"></div>
-            <div className="modal-footer">
-              <button className="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-            </div>
+      <footer
+        style={{
+          backgroundColor: "white",
+          textAlign: "center",
+          padding: "20px 0",
+          borderTop: "1px solid #ccc",
+          marginTop: "40px",
+          width: "100%",
+        }}
+      >
+        <p style={{ margin: 0, color: "#555", fontSize: "14px" }}>
+          © {new Date().getFullYear()} SmartSaving — Todos los derechos
+          reservados.
+        </p>
+      </footer>
+
+      {/* MODAL PERSONALIZADO */}
+      {modalInfo && (
+        <div
+          className="modal-overlay"
+          onClick={() => setModalInfo(null)}
+        >
+          <div
+            className="modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h4>{modalInfo.title}</h4>
+            <p>{modalInfo.detail}</p>
+
+            <button
+              className="btn btn-primary"
+              onClick={() => setModalInfo(null)}
+            >
+              Cerrar
+            </button>
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 }

@@ -1,127 +1,312 @@
-// src/components/Bancos.jsx
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
-const sampleBanks = [
-  { id: 1, bank: "Banco AhorroPlus", plan: "Cuenta Ahorro Programado", rate: "3.5% a.a.", desc: "Transferencias automáticas y libre disponibilidad." },
-  { id: 2, bank: "CréditoFácil S.A.", plan: "Microcrédito para metas", rate: "7.2% a.a.", desc: "Plazos hasta 24 meses, cuotas fijas." },
-  { id: 3, bank: "Inversión Local", plan: "CDT corto plazo", rate: "5.0% a.a.", desc: "Mejor para metas cortas con capital seguro." }
-];
+import fondobancos from "../imagenes/Fondo_bancos.png";
 
 export default function Bancos() {
   const navigate = useNavigate();
-  const [banks] = useState(sampleBanks);
-  const [selectedPlan, setSelectedPlan] = useState("");
-  const [appName, setAppName] = useState("");
-  const [appEmail, setAppEmail] = useState("");
 
-  useEffect(() => {
-    // nada especial que inicializar, pero mantener para la paridad con otros componentes
-  }, []);
+  const [selectedBank, setSelectedBank] = useState(null);
+  const [applicationSent, setApplicationSent] = useState(false);
 
-  function handleSelectPlan(id) {
-    const b = banks.find(x => x.id === id);
-    if (b) setSelectedPlan(`${b.bank} — ${b.plan} (${b.rate})`);
-    // opcional: navegar a la sección de esta página (ya estamos aquí)
-  }
+  // estados del formulario
+  const [nombre, setNombre] = useState("");
+  const [correo, setCorreo] = useState("");
+  const [comentario, setComentario] = useState("");
 
-  function handleApply(e) {
+  const bankList = [
+    {
+      id: 1,
+      name: "Nubank",
+      logo: "../src/imagenes/Nu.png", 
+      description:
+        "Cuenta digital con ahorro automático y total control desde la app.",
+      benefits: [
+        "Crea metas de ahorro con transferencias automáticas.",
+        "No cobra cuota de manejo.",
+        "Su app facilita ver tu progreso y fomenta disciplina financiera.",
+        "Intereses competitivos en NuCuenta."
+      ],
+      habitAdvice:
+        "Nubank te ayuda a crear hábitos de ahorro gracias a sus funciones de organización automática y control visual del dinero."
+    },
+
+    {
+      id: 2,
+      name: "Lulo Bank",
+      logo: "../src/imagenes/Lulo.jpg",
+      description:
+        "Cuenta digital colombiana con ahorro programado flexible.",
+      benefits: [
+        "Bolsillos para separar el dinero por metas.",
+        "Ahorro programado con transferencias automáticas.",
+        "Operaciones sin costo desde la app.",
+        "Te permite visualizar tu avance mes a mes."
+      ],
+      habitAdvice:
+        "Con los bolsillos de Lulo Bank puedes separar tu ahorro del gasto diario, lo que refuerza el hábito de destinar dinero a tus metas."
+    },
+
+    {
+      id: 3,
+      name: "Credy (Créditos rápidos)",
+      logo: "../src/imagenes/Credy.jpeg",
+      description:
+        "Solicita créditos en línea de forma rápida y segura.",
+      benefits: [
+        "Aprobación rápida con pocos requisitos.",
+        "Ideal para cubrir emergencias o complementar metas.",
+        "Ofertas de diferentes entidades para elegir mejor.",
+        "Proceso 100% en línea."
+      ],
+      habitAdvice:
+        "Tomar un crédito responsablemente puede ayudarte a crear disciplina financiera y fortalecer tu hábito de pago mensual."
+    },
+
+    {
+      id: 4,
+      name: "MejorCDT",
+      logo: "../src/imagenes/MejorCDT.png",
+      description:
+        "Plataforma para encontrar los mejores CDT del país.",
+      benefits: [
+        "Comparador de CDT con tasas altas.",
+        "Ahorro seguro y con rentabilidad garantizada.",
+        "Plazos desde corto hasta largo período.",
+        "Ideal para metas de ahorro programado."
+      ],
+      habitAdvice:
+        "Un CDT te obliga a ahorrar a plazo fijo, ayudándote a generar constancia y protegiéndote de gastos impulsivos."
+    }
+  ];
+
+  // ----------- ENVÍO A GOOGLE SHEETS -----------
+  async function handleSubmit(e) {
     e.preventDefault();
-    if (!selectedPlan || !appName || !appEmail) {
-      alert("Completa todos los campos");
+
+    if (!nombre || !correo) {
+      alert("Por favor completa tu nombre y correo.");
       return;
     }
-    alert("Solicitud enviada. Recibirás respuesta por correo. (Simulado)");
-    // reiniciar
-    setSelectedPlan("");
-    setAppName("");
-    setAppEmail("");
+
+    try {
+      const url =
+        "https://script.google.com/macros/s/AKfycbzx99X4NBINNjgd8Ra5GXNK7ikKTXQICVRVj4LDDMo53I4hFKSYd2QfXEynFbrdftawMg/exec";
+
+      await fetch(url, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          nombre: nombre,
+          correo: correo,
+          comentario: comentario,
+          banco: selectedBank.name
+        })
+      });
+
+      setApplicationSent(true);
+
+      // limpiar campos
+      setNombre("");
+      setCorreo("");
+      setComentario("");
+
+      setTimeout(() => {
+        setApplicationSent(false);
+        setSelectedBank(null);
+      }, 5000);
+
+    } catch (err) {
+      console.error("Error al enviar:", err);
+      alert("No se logró enviar la solicitud.");
+    }
   }
 
   return (
     <>
-      <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+      {/* NAV */}
+      <nav className="navbar">
         <div className="container">
-          <a className="navbar-brand nav-brand" href="#" onClick={(e) => { e.preventDefault(); navigate("/"); }}>SmartSaving</a>
-          <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
-            <span className="navbar-toggler-icon"></span>
-          </button>
-          <div className="collapse navbar-collapse" id="navMain">
-            <ul className="navbar-nav ms-auto">
-              <li className="nav-item"><Link className="nav-link" to="/">Inicio</Link></li>
-              <li className="nav-item"><Link className="nav-link" to="/meta">Mi Meta</Link></li>
-              <li className="nav-item"><Link className="nav-link" to="/bancos">Bancos</Link></li>
-            </ul>
-          </div>
+          <span className="nav-brand" onClick={() => navigate("/")}>
+            SmartSaving
+          </span>
+
+          <ul>
+            <li><Link to="/">Inicio</Link></li>
+            <li><Link to="/meta">Mi Meta</Link></li>
+            <li><Link to="/bancos">Bancos</Link></li>
+          </ul>
         </div>
       </nav>
 
-      <main className="container my-5">
-        <section id="bank" className="view active">
+      {/* CONTENIDO */}
+      <div
+        style={{
+          backgroundImage: `url(${fondobancos})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundAttachment: "fixed",
+          backgroundRepeat: "no-repeat",
+          minHeight: "100vh",
+          paddingTop: "100px"
+        }}
+      >
+        <main className="container section">
+          <div className="card-title">
+            <h2 style={{ marginBottom: "20px" }}>Opciones Bancarias</h2>
+          </div>
+
           <div className="row">
-            <div className="col-md-8">
-              <div className="card shadow-sm mb-3">
-                <div className="card-body">
-                  <h5>Integración con entidades</h5>
-                  <p>Simulamos planes y créditos que podrían ayudar a alcanzar tu meta.</p>
+            {/* LISTA DE BANCOS */}
+            <div className="col-5">
+              <div className="card">
+                <h3>Selecciona un banco</h3>
 
-                  <div id="bankList" className="row gy-2">
-                    {banks.map(b => (
-                      <div className="col-md-12" key={b.id}>
-                        <div className="card p-2">
-                          <div className="d-flex justify-content-between align-items-center">
-                            <div>
-                              <strong>{b.plan}</strong>
-                              <div className="small text-muted">{b.bank} — {b.rate}</div>
-                              <div className="mt-1">{b.desc}</div>
-                            </div>
-                            <div>
-                              <button className="btn btn-sm btn-primary" onClick={() => handleSelectPlan(b.id)}>Seleccionar</button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="card shadow-sm">
-                <div className="card-body">
-                  <h6>Solicitar plan</h6>
-                  <p>Selecciona un plan y completa un formulario (simulado).</p>
-                  <form id="applyForm" onSubmit={handleApply}>
-                    <div className="mb-2">
-                      <label className="form-label">Plan seleccionado</label>
-                      <input id="selectedPlan" className="form-control" readOnly value={selectedPlan} />
-                    </div>
-                    <div className="mb-2">
-                      <label className="form-label">Nombre completo</label>
-                      <input id="appName" className="form-control" required value={appName} onChange={(e)=>setAppName(e.target.value)} />
-                    </div>
-                    <div className="mb-2">
-                      <label className="form-label">Correo</label>
-                      <input id="appEmail" className="form-control" type="email" required value={appEmail} onChange={(e)=>setAppEmail(e.target.value)} />
-                    </div>
-                    <button className="btn btn-success">Enviar solicitud</button>
-                  </form>
-                </div>
-              </div>
-            </div>
-
-            <div className="col-md-4">
-              <div className="card shadow-sm p-3">
-                <h6>Recomendaciones financieras</h6>
-                <ul>
-                  <li>Elegir plazos razonables reduce la cuota mensual.</li>
-                  <li>Comparar tasas y comisiones antes de solicitar crédito.</li>
-                  <li>Usar cuentas de ahorro con intereses o CDT para metas cortas.</li>
+                <ul className="list" style={{ marginTop: "12px" }}>
+                  {bankList.map((bank) => (
+                    <li
+                      key={bank.id}
+                      style={{ cursor: "pointer" }}
+                      onClick={() => {
+                        setSelectedBank(bank);
+                        setApplicationSent(false);
+                      }}
+                    >
+                      <strong>{bank.name}</strong>
+                      <br />
+                      <span style={{ fontSize: "0.9rem", color: "#555" }}>
+                        {bank.description}
+                      </span>
+                    </li>
+                  ))}
                 </ul>
               </div>
             </div>
+
+            {/* DETALLES DEL BANCO */}
+            <div className="col-7">
+              {selectedBank ? (
+                <div className="card">
+
+                  {/* LOGO */}
+                  {selectedBank.logo && (
+                    <img
+                      src={selectedBank.logo}
+                      alt={selectedBank.name}
+                      style={{
+                        width: "120px",
+                        height: "auto",
+                        marginBottom: "15px",
+                        borderRadius: "8px"
+                      }}
+                    />
+                  )}
+
+                  <h3>{selectedBank.name}</h3>
+
+                  <p style={{ marginTop: "8px" }}>{selectedBank.description}</p>
+
+                  {/* HÁBITOS */}
+                  <p
+                    style={{
+                      marginTop: "10px",
+                      background: "rgba(255,255,255,0.5)",
+                      padding: "8px 12px",
+                      borderRadius: "6px",
+                      fontStyle: "italic"
+                    }}
+                  >
+                    {selectedBank.habitAdvice}
+                  </p>
+
+                  <h4 style={{ marginTop: "15px" }}>Beneficios</h4>
+                  <ul className="list" style={{ marginTop: "10px" }}>
+                    {selectedBank.benefits.map((b, idx) => (
+                      <li key={idx}>{b}</li>
+                    ))}
+                  </ul>
+
+                  <h4 style={{ marginTop: "20px" }}>Solicitar información</h4>
+
+                  {!applicationSent ? (
+                    <form onSubmit={handleSubmit} style={{ marginTop: "10px" }}>
+
+                      <label className="form-label">Nombre completo</label>
+                      <input
+                        className="input"
+                        type="text"
+                        required
+                        value={nombre}
+                        onChange={(e) => setNombre(e.target.value)}
+                      />
+
+                      <label className="form-label">Correo electrónico</label>
+                      <input
+                        className="input"
+                        type="email"
+                        required
+                        value={correo}
+                        onChange={(e) => setCorreo(e.target.value)}
+                      />
+
+                      <label className="form-label">Comentario opcional</label>
+                      <textarea
+                        className="input"
+                        style={{ height: "80px", resize: "none" }}
+                        value={comentario}
+                        onChange={(e) => setComentario(e.target.value)}
+                      />
+
+                      <button className="btn btn-primary" style={{ marginTop: "10px" }}>
+                        Enviar solicitud
+                      </button>
+                    </form>
+                  ) : (
+                    <div
+                      className="card"
+                      style={{
+                        marginTop: "15px",
+                        background: "#e8f4ff",
+                        borderLeft: "4px solid #007bff"
+                      }}
+                    >
+                      <strong>Solicitud enviada correctamente.</strong>
+                      <p style={{ marginTop: "6px" }}>
+                        Un asesor del banco se comunicará contigo pronto.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="card">
+                  <h3>Selecciona un banco para ver los detalles</h3>
+                  <p style={{ color: "#666", marginTop: "10px" }}>
+                    Aquí aparecerá la información completa del banco.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-        </section>
-      </main>
+        </main>
+      </div>
+
+      {/* FOOTER */}
+      <footer
+        style={{
+          backgroundColor: "white",
+          textAlign: "center",
+          padding: "20px 0",
+          borderTop: "1px solid #ccc",
+          marginTop: "40px",
+          width: "100%"
+        }}
+      >
+        <p style={{ margin: 0, color: "#555", fontSize: "14px" }}>
+          © {new Date().getFullYear()} SmartSaving — Todos los derechos reservados.
+        </p>
+      </footer>
     </>
   );
 }
