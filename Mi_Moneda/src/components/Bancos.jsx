@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import fondobancos from "../imagenes/Fondo_bancos.png";
-import NuLogo from "../imagenes/Nu.png";
-import LuloLogo from "../imagenes/Lulo.jpg";
-import CredyLogo from "../imagenes/Credy.jpeg";
-import MejorCDTLogo from "../imagenes/MejorCDT.png";
+import fondobancos from "Mi_Moneda\public\imagenes\Fondo_bancos.png";
+import NuLogo from "";
+import LuloLogo from "";
+import CredyLogo from "";
+import MejorCDTLogo from "";
 
 export default function Bancos() {
   const navigate = useNavigate();

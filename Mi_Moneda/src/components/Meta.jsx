@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import fondometa from "../imagenes/Fondo_meta.jpg";
+import fondometa from "Mi_Moneda\public\imagenes\Fondo_meta.jpg";
 
 function numberWithCommas(x) {
   return x?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") || "0";
