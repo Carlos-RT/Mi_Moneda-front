@@ -15,7 +15,7 @@ export default function Inicio() {
             onClick={() => navigate("/")}
             style={{ cursor: "pointer" }}
           >
-            SmartSaving
+            Mi Moneda💰
           </span>
 
           <ul>
@@ -44,7 +44,7 @@ export default function Inicio() {
             <div className="row">
               <div className="col">
                 <div className="card">
-                  <h2>Bienvenido a SmartSaving</h2>
+                  <h2>Bienvenido a Mi Moneda💰</h2>
                   <p style={{ marginTop: "10px", lineHeight: "1.6" }}>
                     Organiza tus metas financieras, recibe recomendaciones
                     inteligentes y controla tu progreso de forma sencilla.
@@ -110,7 +110,7 @@ export default function Inicio() {
         }}
       >
         <p style={{ margin: 0, color: "#555", fontSize: "14px" }}>
-          © {new Date().getFullYear()} SmartSaving — Todos los derechos reservados.
+          © {new Date().getFullYear()} Mi Moneda💰 — Todos los derechos reservados.
         </p>
       </footer>
     </>

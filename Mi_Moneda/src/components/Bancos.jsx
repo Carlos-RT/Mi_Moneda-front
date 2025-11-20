@@ -182,7 +182,7 @@ export default function Bancos() {
       <nav className="navbar">
         <div className="container">
           <span className="nav-brand" onClick={() => navigate("/")}>
-            SmartSaving
+            Mi Moneda💰
           </span>
 
           <ul>
@@ -545,7 +545,7 @@ export default function Bancos() {
         }}
       >
         <p style={{ margin: 0, color: "#555", fontSize: "14px" }}>
-          © {new Date().getFullYear()} SmartSaving — Todos los derechos reservados.
+          © {new Date().getFullYear()} Mi Moneda💰 — Todos los derechos reservados.
         </p>
       </footer>
     </>
