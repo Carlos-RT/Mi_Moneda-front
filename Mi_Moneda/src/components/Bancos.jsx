@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import fondobancos from "../imagenes/Fondo_bancos.png";
+import NuLogo from "../imagenes/Nu.png";
+import LuloLogo from "../imagenes/Lulo.jpg";
+import CredyLogo from "../imagenes/Credy.jpeg";
+import MejorCDTLogo from "../imagenes/MejorCDT.png";
 
 export default function Bancos() {
   const navigate = useNavigate();
@@ -18,7 +22,7 @@ export default function Bancos() {
     {
       id: 1,
       name: "Nubank",
-      logo: "../src/imagenes/Nu.png",
+      logo: NuLogo,
       description:
         "Cuenta digital con ahorro automático y total control desde la app.",
       benefits: [
@@ -34,7 +38,7 @@ export default function Bancos() {
     {
       id: 2,
       name: "Lulo Bank",
-      logo: "../src/imagenes/Lulo.jpg",
+      logo: LuloLogo,
       description: "Cuenta digital colombiana con ahorro programado flexible.",
       benefits: [
         "Bolsillos para separar el dinero por metas.",
@@ -49,7 +53,7 @@ export default function Bancos() {
     {
       id: 3,
       name: "Credy (Créditos rápidos)",
-      logo: "../src/imagenes/Credy.jpeg",
+      logo: CredyLogo,
       description: "Solicita créditos en línea de forma rápida y segura.",
       benefits: [
         "Aprobación rápida con pocos requisitos.",
@@ -64,7 +68,7 @@ export default function Bancos() {
     {
       id: 4,
       name: "MejorCDT",
-      logo: "../src/imagenes/MejorCDT.png",
+      logo: MejorCDTLogo,
       description: "Plataforma para encontrar los mejores CDT del país.",
       benefits: [
         "Comparador de CDT con tasas altas.",
