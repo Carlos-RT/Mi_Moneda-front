@@ -167,7 +167,7 @@ export default function Meta() {
       <nav className="navbar">
         <div className="container">
           <span className="nav-brand" onClick={() => navigate("/")}>
-            Mi Moneda💰
+            SmartSaving💰
           </span>
 
           <ul>
@@ -411,7 +411,7 @@ export default function Meta() {
         }}
       >
         <p style={{ margin: 0, color: "#555", fontSize: "14px" }}>
-          © {new Date().getFullYear()} Mi Moneda💰 — Todos los derechos
+          © {new Date().getFullYear()} SmartSaving💰 — Todos los derechos
           reservados.
         </p>
       </footer>
